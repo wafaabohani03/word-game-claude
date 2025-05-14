@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מצא את המילה</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #4a6baf;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        .welcome-screen, .game-screen, .end-screen {
+            width: 100%;
+        }
+        .game-screen, .end-screen {
+            display: none;
+        }
+        /* כפתורים בסיסיים */
+        button {
+            background-color: #4a6baf;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #3a569f;
+        }
+        /* שדות קלט */
+        input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 70%;
+            max-width: 300px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        /* מסך פתיחה */
+        .welcome-container {
+            margin: 40px auto;
+        }
+        .start-btn {
+            background-color: #5cb85c;
+            font-size: 20px;
+            padding: 12px 30px;
+        }
+        .start-btn:hover {
+            background-color: #4cae4c;
+        }
+        /* מסך משחק */
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            background-color: #e9f0fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat-box span:first-child {
+            font-weight: bold;
+            color: #4a6baf;
+        }
+        .stat-box span:last-child {
+            font-size: 1.2rem;
+            margin-top: 5px;
+        }
+        .level-indicator {
+            font-size: 1.2rem;
+            color: #4a6baf;
+            margin: 15px 0;
+        }
+        .clue-container {
+            background: #fff5e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            border: 2px solid #ffe0b2;
+            min-height: 80px;
+        }
+        .clue {
+            font-size: 1.5rem;
+            color: #ff9800;
+            margin-bottom: 10px;
+        }
+        .word-container {
+            margin: 20px 0;
+            min-height: 60px;
+        }
+        .selected-letters {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .letter-placeholder {
+            width: 40px;
+            height: 40px;
+            border: 2px dashed #bbb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            background-color: #fff;
+        }
+        .letters-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .letter-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: #6bb9f0;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        .letter-btn:hover {
+            background-color: #5daae0;
+        }
+        .letter-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .feedback {
+            color: #4a6baf;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            min-height: 30px;
+        }
+        .game-controls {
+            margin: 20px 0;
+        }
+        .hint-btn {
+            background-color: #ff9800;
+        }
+        .hint-btn:hover {
+            background-color: #e68a00;
+        }
+        /* מסך סיום */
+        .end-screen {
+            text-align: center;
+        }
+        .trophy {
+            font-size: 80px;
+            margin: 20px 0;
+            color: #ffc107;
+        }
+        .congrats-message {
+            font-size: 2rem;
+            color: #4a6baf;
+            margin-bottom: 20px;
+        }
+        .player-stats {
+            background-color: #e9f0fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: right;
+        }
+        .play-again-btn {
+            background-color: #5cb85c;
+            padding: 12px 30px;
+            font-size: 18px;
+        }
+        .play-again-btn:hover {
+            background-color: #4cae4c;
+        }
+        /* אנימציות */
+        .correct-animation {
+            animation: correct 1s;
+        }
+        @keyframes correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); background-color: #5cb85c; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- מסך פתיחה -->
+        <div class="welcome-screen">
+            <h1>מצא את המילה</h1>
+            <div class="welcome-container">
+                <p>ברוכים הבאים למשחק "מצא את המילה"!</p>
+                <p>הרכיבו את המילה הנכונה לפי הרמז שיופיע.</p>
+                <input type="text" id="player-name" placeholder="הכניסו את השם שלכם" required>
+                <br>
+                <button class="start-btn" onclick="startGame()">התחל משחק</button>
+            </div>
+        </div>
+
+        <!-- מסך משחק -->
+        <div class="game-screen">
+            <h1>מצא את המילה</h1>
+            <div class="game-stats">
+                <div class="stat-box">
+                    <span>זמן</span>
+                    <span id="timer">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <span>שחקן</span>
+                    <span id="player-name-display"></span>
+                </div>
+                <div class="stat-box">
+                    <span>נקודות</span>
+                    <span id="score">0</span>
+                </div>
+            </div>
+
+            <div class="level-indicator">
+                <span id="level-display">שלב 1</span> - 
+                <span id="clue-counter">רמז 1 מתוך 3</span>
+            </div>
+
+            <div class="clue-container">
+                <div class="clue" id="clue-text">הרמז יופיע כאן...</div>
+            </div>
+
+            <div class="word-container">
+                <div class="selected-letters" id="selected-letters">
+                    <!-- כאן יופיעו תיבות האותיות שנבחרו -->
+                </div>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="letters-row" id="letters-row">
+                <!-- כאן יופיעו כפתורי האותיות -->
+            </div>
+
+            <div class="game-controls">
+                <button class="hint-btn" onclick="showHint()">רמז נוסף (-1 נקודה)</button>
+                <button onclick="checkAnswer()">בדוק</button>
+                <button onclick="clearSelection()">נקה</button>
+            </div>
+        </div>
+
+        <!-- מסך סיום -->
+        <div class="end-screen">
+            <h1>מצא את המילה</h1>
+            <div class="trophy">🏆</div>
+            <div class="congrats-message">כל הכבוד! פתרת את כל המילים!</div>
+            <div class="player-stats" id="final-stats">
+                <p>שם: <span id="final-name"></span></p>
+                <p>נקודות: <span id="final-score"></span></p>
+                <p>זמן: <span id="final-time"></span></p>
+            </div>
+            <button class="play-again-btn" onclick="resetGame()">שחק שוב</button>
+        </div>
+    </div>
+
+    <script>
+        // משתנים גלובליים
+        let playerName = "";
+        let currentLevel = 1;
+        let currentClueIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let seconds = 0;
+        let minutes = 0;
+        let selectedLetters = [];
+        let currentWord = "";
+        let hintsUsed = 0;
+        
+        // מאגר המילים והרמזים
+        const levels = [
+            // שלב 1 - מילים של 3 אותיות
+            [
+                { word: "דג", clue: "חיה שחיה במים", letters: ["ד", "ג", "כ", "ל", "א", "ש"] },
+                { word: "דב", clue: "חיה גדולה עם פרווה", letters: ["ד", "ב", "ח", "ט", "ק", "ר"] },
+                { word: "יד", clue: "איבר בגוף שיש לו חמש אצבעות", letters: ["י", "ד", "ב", "פ", "ר", "ז"] }
+            ],
+            // שלב 2 - מילים של 4 אותיות
+            [
+                { word: "אריה", clue: "מלך החיות", letters: ["א", "ר", "י", "ה", "ת", "ל", "נ", "ס"] },
+                { word: "בית", clue: "המקום שגרים בו", letters: ["ב", "י", "ת", "ח", "ש", "ג", "ר", "כ"] },
+                { word: "ספר", clue: "קוראים בו סיפורים", letters: ["ס", "פ", "ר", "ב", "ק", "ע", "ל", "ת"] }
+            ],
+            // שלב 3 - מילים של 5 אותיות
+            [
+                { word: "מחשב", clue: "מכשיר שאפשר לשחק בו משחקים", letters: ["מ", "ח", "ש", "ב", "ג", "ל", "ת", "פ", "ק"] },
+                { word: "גינה", clue: "מקום שצומחים בו פרחים", letters: ["ג", "י", "נ", "ה", "ח", "ת", "מ", "א", "ע"] },
+                { word: "חלון", clue: "דרכו אפשר לראות את מה שקורה בחוץ", letters: ["ח", "ל", "ו", "ן", "ב", "ה", "ר", "ט", "כ"] }
+            ]
+        ];
+
+        // פונקציות משחק
+
+        // התחלת המשחק
+        function startGame() {
+            playerName = document.getElementById("player-name").value.trim();
+            if (playerName === "") {
+                alert("אנא הכניסו את השם שלכם");
+                return;
+            }
+
+            // הצג את מסך המשחק
+            document.querySelector(".welcome-screen").style.display = "none";
+            document.querySelector(".game-screen").style.display = "block";
+            
+            // הצג את שם השחקן
+            document.getElementById("player-name-display").textContent = playerName;
+            
+            // התחל טיימר
+            startTimer();
+            
+            // הצג את הרמז הראשון
+            loadClue();
+        }
+
+        // טעינת רמז חדש
+        function loadClue() {
+            // נקה את הבחירה הקודמת
+            clearSelection();
+            document.getElementById("feedback").textContent = "";
+            
+            // קבל את המילה הנוכחית והרמז
+            const levelData = levels[currentLevel - 1];
+            const clueData = levelData[currentClueIndex];
+            currentWord = clueData.word;
+            
+            // הצג את הרמז
+            document.getElementById("clue-text").textContent = clueData.clue;
+            
+            // הצג מספר רמז ושלב
+            document.getElementById("level-display").textContent = `שלב ${currentLevel}`;
+            document.getElementById("clue-counter").textContent = `רמז ${currentClueIndex + 1} מתוך ${levelData.length}`;
+            
+            // צור מקומות לאותיות
+            createLetterPlaceholders();
+            
+            // צור כפתורי אותיות
+            createLetterButtons(clueData.letters);
+        }
+
+        // יצירת מקומות לאותיות הנבחרות
+        function createLetterPlaceholders() {
+            const container = document.getElementById("selected-letters");
+            container.innerHTML = "";
+            
+            // צור תיבות ריקות למספר האותיות במילה
+            for (let i = 0; i < currentWord.length; i++) {
+                const placeholder = document.createElement("div");
+                placeholder.className = "letter-placeholder";
+                container.appendChild(placeholder);
+            }
+            
+            // אפס מערך אותיות נבחרות
+            selectedLetters = [];
+        }
+
+        // יצירת כפתורי אותיות
+        function createLetterButtons(letters) {
+            const container = document.getElementById("letters-row");
+            container.innerHTML = "";
+            
+            // ערבוב אקראי של האותיות
+            const shuffledLetters = shuffleArray([...letters]);
+            
+            // צור כפתור לכל אות
+            shuffledLetters.forEach(letter => {
+                const button = document.createElement("button");
+                button.className = "letter-btn";
+                button.textContent = letter;
+                button.addEventListener("click", () => selectLetter(letter, button));
+                container.appendChild(button);
+            });
+        }
+
+        // בחירת אות
+        function selectLetter(letter, button) {
+            // אם יש עדיין מקום למילה
+            if (selectedLetters.length < currentWord.length) {
+                selectedLetters.push({ letter, button });
+                button.disabled = true;
+                
+                // הצג את האות שנבחרה
+                const placeholders = document.querySelectorAll(".letter-placeholder");
+                placeholders[selectedLetters.length - 1].textContent = letter;
+            }
+            
+            // בדוק אם כל האותיות נבחרו
+            if (selectedLetters.length === currentWord.length) {
+                document.getElementById("feedback").textContent = "לחצו על 'בדוק' לבדיקת התשובה";
+            }
+        }
+
+        // ניקוי הבחירה
+        function clearSelection() {
+            // שחרר את כל הכפתורים
+            selectedLetters.forEach(item => {
+                item.button.disabled = false;
+            });
+            
+            // נקה את התיבות
+            document.querySelectorAll(".letter-placeholder").forEach(placeholder => {
+                placeholder.textContent = "";
+            });
+            
+            // אפס את מערך האותיות הנבחרות
+            selectedLetters = [];
+            
+            // נקה הודעת משוב
+            document.getElementById("feedback").textContent = "";
+        }
+
+        // בדיקת התשובה
+        function checkAnswer() {
+            if (selectedLetters.length < currentWord.length) {
+                document.getElementById("feedback").textContent = "בחרו את כל האותיות קודם!";
+                return;
+            }
+            
+            // בנה מחרוזת מהאותיות שנבחרו
+            const selectedWord = selectedLetters.map(item => item.letter).join("");
+            
+            // בדוק אם התשובה נכונה
+            if (selectedWord === currentWord) {
+                // הוסף נקודה
+                score++;
+                document.getElementById("score").textContent = score;
+                
+                // אנימציה של הצלחה
+                const placeholders = document.querySelectorAll(".letter-placeholder");
+                placeholders.forEach(placeholder => {
+                    placeholder.classList.add("correct-animation");
+                    setTimeout(() => placeholder.classList.remove("correct-animation"), 1000);
+                });
+                
+                document.getElementById("feedback").textContent = "נכון מאוד!";
+                
+                // עבור לרמז הבא או לשלב הבא
+                setTimeout(() => {
+                    nextClue();
+                }, 1500);
+            } else {
+                document.getElementById("feedback").textContent = "לא נכון. נסו שוב!";
+                // נקה את הבחירה לאחר שגיאה
+                setTimeout(() => {
+                    clearSelection();
+                }, 1000);
+            }
+        }
+
+        // מעבר לרמז הבא
+        function nextClue() {
+            currentClueIndex++;
+            
+            // בדוק אם סיימנו את כל הרמזים בשלב הנוכחי
+            if (currentClueIndex >= levels[currentLevel - 1].length) {
+                currentClueIndex = 0;
+                currentLevel++;
+                
+                // בדוק אם סיימנו את כל השלבים
+                if (currentLevel > levels.length) {
+                    // סיום המשחק
+                    endGame();
+                    return;
+                }
+            }
+            
+            // טען את הרמז הבא
+            loadClue();
+        }
+
+        // הצגת רמז נוסף
+        function showHint() {
+            // אם לא השתמשו ברמז עדיין
+            if (selectedLetters.length === 0) {
+                // הפחת נקודה
+                score = Math.max(0, score - 1);
+                document.getElementById("score").textContent = score;
+                
+                // מצא את הכפתור של האות הראשונה
+                const firstLetter = currentWord[0];
+                const letterButtons = document.querySelectorAll(".letter-btn");
+                
+                // בחר אוטומטית את האות הראשונה
+                for (const button of letterButtons) {
+                    if (button.textContent === firstLetter && !button.disabled) {
+                        selectLetter(firstLetter, button);
+                        break;
+                    }
+                }
+                
+                document.getElementById("feedback").textContent = "קיבלת רמז! (-1 נקודה)";
+            } else {
+                document.getElementById("feedback").textContent = "ניתן להשתמש ברמז רק בתחילת כל מילה";
+            }
+        }
+
+        // סיום המשחק
+        function endGame() {
+            // עצור את הטיימר
+            clearInterval(timerInterval);
+            
+            // הצג את מסך הסיום
+            document.querySelector(".game-screen").style.display = "none";
+            document.querySelector(".end-screen").style.display = "block";
+            
+            // הצג את הסטטיסטיקות
+            document.getElementById("final-name").textContent = playerName;
+            document.getElementById("final-score").textContent = score;
+            document.getElementById("final-time").textContent = document.getElementById("timer").textContent;
+        }
+
+        // איפוס המשחק לשחקן חדש
+        function resetGame() {
+            // איפוס משתנים
+            playerName = "";
+            currentLevel = 1;
+            currentClueIndex = 0;
+            score = 0;
+            seconds = 0;
+            minutes = 0;
+            
+            // איפוס התצוגה
+            document.getElementById("score").textContent = "0";
+            document.getElementById("timer").textContent = "00:00";
+            document.getElementById("player-name").value = "";
+            
+            // חזרה למסך פתיחה
+            document.querySelector(".end-screen").style.display = "none";
+            document.querySelector(".welcome-screen").style.display = "block";
+        }
+
+        // התחלת טיימר
+        function startTimer() {
+            seconds = 0;
+            minutes = 0;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                if (seconds >= 60) {
+                    seconds = 0;
+                    minutes++;
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        // עדכון תצוגת הטיימר
+        function updateTimerDisplay() {
+            const min = String(minutes).padStart(2, "0");
+            const sec = String(seconds).padStart(2, "0");
+            document.getElementById("timer").textContent = `${min}:${sec}`;
+        }
+
+        // ערבוב מערך (אלגוריתם Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>
